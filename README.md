@@ -1,0 +1,48 @@
+# MiniTrain
+
+MiniTrain is a small, inspectable lab for learning how modern LLM training
+systems work. The project starts from a single-GPU PyTorch baseline and will
+progress toward DDP, FSDP2, tensor parallelism, and DeepSpeed on a single node
+with two GPUs.
+
+## Step 1: verify the environment
+
+The environment checker reports the versions and hardware that later steps
+depend on. It does not run a training workload.
+
+```bash
+python3 scripts/check_env.py
+```
+
+On the target Kaggle two-GPU runtime, use strict validation:
+
+```bash
+python3 scripts/check_env.py --require-gpus 2
+```
+
+Run the CPU-compatible tests with:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+The checker exits with a non-zero status in strict mode if PyTorch, CUDA,
+NCCL, or the requested number of GPUs is unavailable. GPU topology is read
+from `nvidia-smi topo -m` when that command exists.
+
+## Repository layout
+
+```text
+minitrain/       Reusable Python implementation
+scripts/         Executable experiment entry points
+configs/         Experiment configuration files (introduced in Step 2)
+tests/           CPU, GPU, and distributed correctness tests
+results/raw/     Raw benchmark records
+results/tables/  Derived result tables
+results/figures/ Benchmark and profiler figures
+docs/            Design notes and experiment reports
+```
+
+Core implementations live in Python files rather than notebook cells, so the
+same commands can run on Kaggle and ordinary Linux machines.
+
