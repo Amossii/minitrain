@@ -46,3 +46,15 @@ docs/            Design notes and experiment reports
 Core implementations live in Python files rather than notebook cells, so the
 same commands can run on Kaggle and ordinary Linux machines.
 
+## Step 2: inspect experiment configuration
+
+Model shapes and training parameters are validated before allocating GPU state.
+The built-in model presets are `tiny`, `small`, and `medium`.
+
+```bash
+python3 scripts/show_config.py --model tiny
+python3 scripts/show_config.py --model small --local-batch-size 4 --precision fp16
+```
+
+`local_batch_size` always means samples processed by one process. Future
+data-parallel code will derive `global_batch_size` from it and `world_size`.
