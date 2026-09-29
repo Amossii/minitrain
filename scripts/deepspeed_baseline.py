@@ -188,6 +188,7 @@ def main() -> None:
         hidden_size,
         device=device,
         generator=generator,
+        dtype=torch.float16,
     )
 
     # 先执行 warmup。
