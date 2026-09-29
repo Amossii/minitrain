@@ -139,7 +139,15 @@ def print_memory(
 def main() -> None:
     parser = argparse.ArgumentParser()
 
-    # 向 argparse 注册 DeepSpeed 所需参数。
+    # DeepSpeed launcher 会自动传：
+    # --local_rank=0
+    # --local_rank=1
+    parser.add_argument(
+        "--local_rank",
+        type=int,
+        default=-1,
+    )
+
     parser = deepspeed.add_config_arguments(parser)
 
     args = parser.parse_args()
