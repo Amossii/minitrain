@@ -7,14 +7,11 @@ import torch
 
 # 构造一个简单的 MLP block。
 #
-# 输入 shape:
+# 输入：
 #   [batch_size, hidden_size]
 #
-# 输出 shape:
+# 输出：
 #   [batch_size, hidden_size]
-#
-# 使用较大的 Linear，
-# 便于观察不同 ZeRO stage 对模型状态显存的影响。
 def build_block(
     hidden_size: int,
     intermediate_size: int,
@@ -34,8 +31,8 @@ def build_block(
 
 # 构造完整 toy model。
 #
-# 模型结构应与 DDP / FSDP baseline 保持一致，
-# 避免把模型变化混入框架对比。
+# 模型结构与 DDP / FSDP baseline 保持一致，
+# 避免模型本身变化影响显存对比。
 def build_model(
     hidden_size: int = 2048,
     intermediate_size: int = 8192,
@@ -78,41 +75,45 @@ def build_model(
 # 执行一个 DeepSpeed microstep。
 #
 # DeepSpeed Engine 接管：
-#
-# backward
-# gradient synchronization / partition
-# gradient accumulation bookkeeping
-# optimizer step
-#
-# 当 accumulation 尚未达到边界时，
-# engine.step() 不一定真正更新参数。
+# 1. backward
+# 2. gradient synchronization / partition
+# 3. gradient accumulation bookkeeping
+# 4. optimizer step
 def train_microstep(
     engine,
     x: torch.Tensor,
+    rank: int,
+    step_name: str,
 ) -> float:
+
+    # 用这些探针确认 ZeRO-3 到底停在 forward、backward
+    # 还是 engine.step()。
+    print(f"rank={rank} {step_name} before_forward")
 
     output = engine(x)
 
+    print(f"rank={rank} {step_name} after_forward")
+
     loss = output.float().square().mean()
 
-    # 不再直接调用 loss.backward()。
-    #
-    # DeepSpeed 需要参与 backward 生命周期，
-    # 才能正确执行 ZeRO gradient partitioning。
     engine.backward(loss)
 
-    # DeepSpeed 根据 gradient accumulation 配置
-    # 决定这一 microstep 是否真正进行 optimizer update。
+    print(f"rank={rank} {step_name} after_backward")
+
     engine.step()
+
+    print(f"rank={rank} {step_name} after_engine_step")
 
     return loss.item()
 
 
 # 打印 GPU 显存统计。
 #
-# peak memory 要在正式测量前 reset，
-# 否则 warmup 和 optimizer state 首次创建
-# 会污染结果。
+# allocated：
+#   当前 PyTorch tensor 实际占用的显存。
+#
+# peak：
+#   从 reset_peak_memory_stats() 之后出现过的峰值显存。
 def print_memory(
     rank: int,
     tag: str,
@@ -121,25 +122,16 @@ def print_memory(
     gb = 1024**3
 
     allocated = torch.cuda.memory_allocated() / gb
-
     peak = torch.cuda.max_memory_allocated() / gb
 
     print(f"rank={rank} {tag} allocated={allocated:.3f} GB peak={peak:.3f} GB")
 
 
 # 主程序。
-#
-# DeepSpeed 推荐通过 launcher 启动，例如：
-#
-# deepspeed \
-#   --num_gpus=2 \
-#   deepspeed_baseline.py \
-#   --deepspeed \
-#   --deepspeed_config ds_zero2.json
 def main() -> None:
     parser = argparse.ArgumentParser()
 
-    # DeepSpeed launcher 会自动传：
+    # DeepSpeed launcher 会自动给不同进程传入：
     # --local_rank=0
     # --local_rank=1
     parser.add_argument(
@@ -162,18 +154,24 @@ def main() -> None:
 
     torch.manual_seed(42)
 
+    print(f"rank={rank} START")
+
     model = build_model()
 
-    # deepspeed.initialize 会根据配置：
-    #
-    # 1. 建立 distributed environment。
-    # 2. 处理 ZeRO state partition。
-    # 3. 创建或包装 optimizer。
-    # 4. 返回 DeepSpeed Engine。
+    print(f"rank={rank} before_deepspeed_initialize")
+
+    # DeepSpeed 会根据 ds_zero2.json / ds_zero3.json
+    # 自动建立相应的 ZeRO optimizer。
     engine, optimizer, _, _ = deepspeed.initialize(
         args=args,
         model=model,
         model_parameters=model.parameters(),
+    )
+
+    print(
+        f"rank={rank} "
+        f"after_deepspeed_initialize "
+        f"zero_stage={engine.zero_optimization_stage()}"
     )
 
     batch_size = 8
@@ -191,30 +189,41 @@ def main() -> None:
         dtype=torch.float16,
     )
 
-    # 先执行 warmup。
-    #
-    # gradient_accumulation_steps = 2，
-    # 所以两个 microsteps 才构成一次完整 update。
-    for _ in range(2):
+    print(f"rank={rank} input_ready")
+
+    # warmup：
+    # gradient_accumulation_steps=2，
+    # 因此两个 microstep 构成一次 optimizer update。
+    for i in range(2):
         train_microstep(
             engine=engine,
             x=x,
+            rank=rank,
+            step_name=f"warmup_{i}",
         )
+
+    print(f"rank={rank} warmup_finished")
 
     torch.cuda.synchronize()
 
     torch.cuda.reset_peak_memory_stats()
 
+    print(f"rank={rank} peak_memory_reset")
+
     losses = []
 
-    # 正式再完成一次 global update。
-    for _ in range(2):
+    # 正式测量的一次 global update。
+    for i in range(2):
         loss = train_microstep(
             engine=engine,
             x=x,
+            rank=rank,
+            step_name=f"measure_{i}",
         )
 
         losses.append(loss)
+
+    print(f"rank={rank} measured_steps_finished")
 
     torch.cuda.synchronize()
 
@@ -226,6 +235,8 @@ def main() -> None:
         rank=rank,
         tag="after_update",
     )
+
+    print(f"rank={rank} END")
 
 
 if __name__ == "__main__":
