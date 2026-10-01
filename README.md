@@ -81,3 +81,13 @@ conda run -n sglang python scripts/inspect_model.py \
   --model tiny --batch-size 2 --seq-len 8
 conda run -n sglang python -m unittest discover -s tests -v
 ```
+
+## Step 5: run the single-device training loop
+
+The training entry point exposes the complete PyTorch update lifecycle without
+Trainer-style framework abstraction.
+
+```bash
+conda run -n sglang python scripts/train_single.py \
+  --model tiny --device cpu --local-batch-size 2 --seq-len 16 --steps 3
+```
