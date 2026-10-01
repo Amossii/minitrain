@@ -69,3 +69,15 @@ to an input position.
 python3 scripts/inspect_data.py --model tiny --batch-size 2 --seq-len 8
 python3 -m unittest discover -s tests -v
 ```
+
+## Step 4: inspect the handwritten Transformer
+
+The decoder uses pre-norm causal self-attention and a SwiGLU feed-forward
+network. Its explicit projection layers will become tensor-parallel boundaries
+in later steps.
+
+```bash
+conda run -n sglang python scripts/inspect_model.py \
+  --model tiny --batch-size 2 --seq-len 8
+conda run -n sglang python -m unittest discover -s tests -v
+```
