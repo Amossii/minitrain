@@ -58,3 +58,14 @@ python3 scripts/show_config.py --model small --local-batch-size 4 --precision fp
 
 `local_batch_size` always means samples processed by one process. Future
 data-parallel code will derive `global_batch_size` from it and `world_size`.
+
+## Step 3: inspect synthetic token data
+
+MiniTrain uses deterministic random tokens to isolate systems experiments from
+tokenization and storage overhead. Each label is the next token corresponding
+to an input position.
+
+```bash
+python3 scripts/inspect_data.py --model tiny --batch-size 2 --seq-len 8
+python3 -m unittest discover -s tests -v
+```
