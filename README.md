@@ -91,3 +91,15 @@ Trainer-style framework abstraction.
 conda run -n sglang python scripts/train_single.py \
   --model tiny --device cpu --local-batch-size 2 --seq-len 16 --steps 3
 ```
+
+## Step 6: record unified metrics
+
+Warmup steps are excluded from measurement. CPU uses a monotonic clock; CUDA
+uses Events for asynchronous GPU timing. Each measured step is written using a
+stable CSV schema.
+
+```bash
+conda run -n sglang python scripts/train_single.py \
+  --model tiny --device cpu --local-batch-size 1 --seq-len 8 \
+  --warmup-steps 1 --steps 2 --output /tmp/minitrain_metrics.csv
+```
