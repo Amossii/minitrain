@@ -162,3 +162,12 @@ compares one DDP update with an equivalent single-process global-batch update.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/verify_ddp_correctness.py --backend nccl --local-batch-size 2 --seq-len 16 --learning-rate 0.01 --seed 42
 ```
+
+## Step 13: benchmark DDP scaling
+
+The runner performs world-size 1/2 strong and weak scaling jobs in fresh
+processes and writes raw plus summarized CSV results.
+
+```bash
+python3 scripts/benchmark_ddp_scaling.py --backend nccl --model tiny --seq-len 128 --strong-global-batch-size 2 --weak-local-batch-size 1 --warmup-steps 5 --steps 20 --seed 42 --run-name kaggle_ddp_scaling
+```
