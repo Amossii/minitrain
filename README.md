@@ -123,10 +123,24 @@ Use Gloo for a local two-process CPU correctness check and NCCL for the target
 Kaggle two-GPU runtime.
 
 ```bash
-conda run -n sglang python -m torch.distributed.run \
-  --standalone --nproc-per-node=2 \
-  scripts/distributed_hello.py --backend gloo
+conda run -n sglang python -m torch.distributed.run --standalone --nproc-per-node=2 scripts/distributed_hello.py --backend gloo
+torchrun --standalone --nproc-per-node=2 scripts/distributed_hello.py --backend nccl
+```
 
-torchrun --standalone --nproc-per-node=2 \
-  scripts/distributed_hello.py --backend nccl
+## Step 9: verify collective semantics
+
+The correctness script uses hand-computable tensors and assertions for
+Broadcast, Reduce, AllReduce, AllGather, ReduceScatter, and Barrier.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/collective_correctness.py --backend nccl
+```
+
+## Step 10: benchmark NCCL AllReduce
+
+The benchmark sweeps per-rank message sizes, excludes warmup, uses CUDA Events,
+and writes latency plus algorithm/bus bandwidth to CSV.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/benchmark_collectives.py --backend nccl --min-bytes 1024 --max-bytes 268435456 --factor 4 --warmup-iterations 10 --iterations 50 --output results/raw/kaggle_nccl_all_reduce.csv
 ```

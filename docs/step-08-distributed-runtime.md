@@ -19,17 +19,14 @@ Cleanup destroys this state before process exit.
 ## Local CPU correctness run
 
 ```bash
-conda run -n sglang python -m torch.distributed.run \
-  --standalone --nproc-per-node=2 \
-  scripts/distributed_hello.py --backend gloo
+conda run -n sglang python -m torch.distributed.run --standalone --nproc-per-node=2 scripts/distributed_hello.py --backend gloo
 ```
 
 ## Kaggle two-GPU NCCL run
 
 ```bash
 python3 scripts/check_env.py --require-gpus 2
-torchrun --standalone --nproc-per-node=2 \
-  scripts/distributed_hello.py --backend nccl
+torchrun --standalone --nproc-per-node=2 scripts/distributed_hello.py --backend nccl
 ```
 
 Expected identities are rank/local-rank pairs `(0,0)` and `(1,1)`, both with
