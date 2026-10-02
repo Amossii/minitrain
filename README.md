@@ -144,3 +144,12 @@ and writes latency plus algorithm/bus bandwidth to CSV.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/benchmark_collectives.py --backend nccl --min-bytes 1024 --max-bytes 268435456 --factor 4 --warmup-iterations 10 --iterations 50 --output results/raw/kaggle_nccl_all_reduce.csv
 ```
+
+## Step 11: train with DistributedDataParallel
+
+Each rank owns a full model replica and a different local data shard. DDP
+synchronizes gradients during backward before every rank updates its replica.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/train_ddp.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --steps 5 --seed 42
+```
