@@ -153,3 +153,12 @@ synchronizes gradients during backward before every rank updates its replica.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/train_ddp.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --steps 5 --seed 42
 ```
+
+## Step 12: verify DDP correctness
+
+The check compares every synchronized gradient and parameter across ranks, then
+compares one DDP update with an equivalent single-process global-batch update.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_ddp_correctness.py --backend nccl --local-batch-size 2 --seq-len 16 --learning-rate 0.01 --seed 42
+```
