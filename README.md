@@ -116,3 +116,17 @@ python3 scripts/benchmark_single.py \
   --warmup-steps 5 --steps 20 \
   --run-name kaggle_single_fp32
 ```
+
+## Step 8: initialize a distributed process group
+
+Use Gloo for a local two-process CPU correctness check and NCCL for the target
+Kaggle two-GPU runtime.
+
+```bash
+conda run -n sglang python -m torch.distributed.run \
+  --standalone --nproc-per-node=2 \
+  scripts/distributed_hello.py --backend gloo
+
+torchrun --standalone --nproc-per-node=2 \
+  scripts/distributed_hello.py --backend nccl
+```
