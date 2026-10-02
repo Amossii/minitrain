@@ -103,3 +103,16 @@ conda run -n sglang python scripts/train_single.py \
   --model tiny --device cpu --local-batch-size 1 --seq-len 8 \
   --warmup-steps 1 --steps 2 --output /tmp/minitrain_metrics.csv
 ```
+
+## Step 7: run the formal single-GPU baseline
+
+The runner executes every model in a fresh process and creates both raw
+per-step CSV files and one median summary table.
+
+```bash
+python3 scripts/benchmark_single.py \
+  --device cuda --models tiny small medium \
+  --local-batch-size 1 --seq-len 256 \
+  --warmup-steps 5 --steps 20 \
+  --run-name kaggle_single_fp32
+```

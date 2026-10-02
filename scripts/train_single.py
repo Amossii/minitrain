@@ -118,6 +118,7 @@ def main() -> int:
             local_batch_size=train_config.local_batch_size,
             seq_len=args.seq_len,
             num_parameters=num_parameters,
+            model_name=args.model,
             precision=train_config.precision,
             strategy="single",
         )

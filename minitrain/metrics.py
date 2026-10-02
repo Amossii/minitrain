@@ -31,6 +31,7 @@ class StepMetrics:
     global_batch_size: int
     seq_len: int
     num_parameters: int
+    model_name: str
     precision: str
     strategy: str
 
@@ -50,6 +51,7 @@ class StepMetrics:
         local_batch_size: int,
         seq_len: int,
         num_parameters: int,
+        model_name: str,
         precision: str,
         strategy: str,
     ) -> "StepMetrics":
@@ -81,6 +83,7 @@ class StepMetrics:
             global_batch_size=global_batch_size,
             seq_len=seq_len,
             num_parameters=num_parameters,
+            model_name=model_name,
             precision=precision,
             strategy=strategy,
         )

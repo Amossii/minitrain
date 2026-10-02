@@ -31,6 +31,7 @@ class StepMetricsTest(unittest.TestCase):
             local_batch_size=4,
             seq_len=16,
             num_parameters=1_000,
+            model_name="tiny",
             precision="fp32",
             strategy="test",
         )
@@ -53,6 +54,7 @@ class StepMetricsTest(unittest.TestCase):
             local_batch_size=2,
             seq_len=8,
             num_parameters=123,
+            model_name="tiny",
             precision="fp32",
             strategy="single",
         )
@@ -64,6 +66,7 @@ class StepMetricsTest(unittest.TestCase):
 
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["strategy"], "single")
+        self.assertEqual(rows[0]["model_name"], "tiny")
         self.assertEqual(rows[0]["global_batch_size"], "2")
         self.assertIn("peak_memory_reserved", rows[0])
 
