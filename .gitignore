@@ -7,10 +7,5 @@ dist/
 *.egg-info/
 
 # Benchmark artifacts are generated locally; directory placeholders stay tracked.
-results/raw/*
-!results/raw/.gitkeep
-results/tables/*
-!results/tables/.gitkeep
-results/figures/*
-!results/figures/.gitkeep
+# 不要忽略result文件夹，因为我要在本机和kaggle上同步result文件夹
 

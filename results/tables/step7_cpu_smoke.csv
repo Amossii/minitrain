@@ -1,0 +1,2 @@
+model_name,strategy,precision,world_size,local_batch_size,global_batch_size,seq_len,num_parameters,measured_steps,median_step_time,median_forward_time,median_backward_time,median_optimizer_time,median_tokens_per_second,median_samples_per_second,max_peak_memory_allocated,max_peak_memory_reserved
+tiny,single,fp32,1,1,1,8,9077888,1,0.0445490700000164,0.005849352999973689,0.011038646000031349,0.02766107100001136,179.5772616576969,22.447157707212114,0,0

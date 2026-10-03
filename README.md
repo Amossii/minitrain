@@ -171,3 +171,12 @@ processes and writes raw plus summarized CSV results.
 ```bash
 python3 scripts/benchmark_ddp_scaling.py --backend nccl --model tiny --seq-len 128 --strong-global-batch-size 2 --weak-local-batch-size 1 --warmup-steps 5 --steps 20 --seed 42 --run-name kaggle_ddp_scaling
 ```
+
+## Step 14: profile DDP communication overlap
+
+Warm up the reducer, then capture rank-local CPU/CUDA/NCCL timelines and DDP
+bucket metadata without adding measurement collectives to the profiled region.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/profile_ddp.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --warmup-steps 3 --profile-steps 3 --bucket-cap-mb 1 --output-dir results/raw/profiles/ddp_tiny
+```

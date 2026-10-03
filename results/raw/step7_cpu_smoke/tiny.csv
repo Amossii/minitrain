@@ -1,0 +1,2 @@
+step,loss,step_time,forward_time,backward_time,optimizer_time,tokens_per_second,samples_per_second,peak_memory_allocated,peak_memory_reserved,world_size,local_batch_size,global_batch_size,seq_len,num_parameters,model_name,precision,strategy
+0,10.39645004272461,0.0445490700000164,0.005849352999973689,0.011038646000031349,0.02766107100001136,179.5772616576969,22.447157707212114,0,0,1,1,1,8,9077888,tiny,fp32,single
