@@ -1,0 +1,3 @@
+strategy,model_name,precision,world_size,local_batch_size,global_batch_size,seq_len,num_parameters,warmup_steps,measured_steps,parameter_bytes_per_rank,gradient_bytes_per_rank,optimizer_state_bytes_per_rank,theoretical_model_state_bytes_per_rank,observed_peak_allocated_bytes,observed_peak_reserved_bytes,observed_end_allocated_bytes,observed_end_reserved_bytes,peak_allocated_ratio_vs_ddp,peak_allocated_saving_vs_ddp
+ddp,tiny,fp32,2,1,2,128,9077888,3,5,36311552,36311552,72623264,145246208,255882752,262144000,202398208,262144000,1.0,0.0
+fsdp2,tiny,fp32,2,1,2,128,9077888,3,5,18155776,18155776,36311712,72623104,180443648,278921216,91045376,278921216,0.7051809728855816,0.29481902711441843
