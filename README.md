@@ -212,3 +212,12 @@ out-of-memory failures count as OOM; other failures stop the experiment.
 ```bash
 python scripts/benchmark_oom_boundary.py --strategies ddp fsdp2 --targets-millions 100 200 300 400 --world-size 2 --local-batch-size 1 --seq-len 128 --steps 1 --seed 42 --run-name kaggle_oom_boundary
 ```
+
+## Step 18: profile FSDP2 communication
+
+Capture per-rank traces and inspect parameter AllGather, gradient
+ReduceScatter, layer computation, and their possible overlap.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/profile_fsdp2.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --warmup-steps 3 --profile-steps 3 --seed 42 --output-dir results/raw/profiles/fsdp2_tiny
+```

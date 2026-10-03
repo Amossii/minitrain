@@ -46,7 +46,16 @@ def profile_output_paths(output_dir: Path, rank: int) -> ProfileOutputPaths:
 # Input is profiler event names. Output keeps likely distributed communication
 # entries so tests and later report tooling can locate NCCL/c10d work explicitly.
 def communication_event_names(event_names: list[str]) -> list[str]:
-    """Filter profiler event names that likely represent DDP communication."""
+    """Filter profiler event names that likely represent distributed communication."""
 
-    markers = ("nccl", "allreduce", "all_reduce", "c10d")
+    markers = (
+        "nccl",
+        "allreduce",
+        "all_reduce",
+        "allgather",
+        "all_gather",
+        "reducescatter",
+        "reduce_scatter",
+        "c10d",
+    )
     return [name for name in event_names if any(key in name.lower() for key in markers)]
