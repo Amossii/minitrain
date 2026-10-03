@@ -221,3 +221,12 @@ ReduceScatter, layer computation, and their possible overlap.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/profile_fsdp2.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --warmup-steps 3 --profile-steps 3 --seed 42 --output-dir results/raw/profiles/fsdp2_tiny
 ```
+
+## Step 19: implement ColumnParallelLinear
+
+Shard `nn.Linear.weight=[out_features, in_features]` along its output dimension,
+optionally AllGather the output, and AllReduce input-gradient contributions.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_column_parallel.py --backend nccl --batch-size 2 --seq-len 3 --in-features 8 --out-features 12 --seed 42
+```
