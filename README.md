@@ -194,3 +194,12 @@ torchrun --standalone --nproc-per-node=2 scripts/verify_fsdp2_correctness.py --b
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/train_fsdp2.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --steps 5 --seed 42
 ```
+
+## Step 16: compare DDP and FSDP2 GPU memory
+
+Run each strategy in a fresh process group with an identical workload, then
+compare measured allocated/reserved peaks with persistent-state estimates.
+
+```bash
+python scripts/benchmark_ddp_fsdp2_memory.py --model tiny --world-size 2 --local-batch-size 1 --seq-len 128 --warmup-steps 3 --steps 5 --seed 42 --run-name kaggle_tiny_memory
+```
