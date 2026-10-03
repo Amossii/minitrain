@@ -180,3 +180,17 @@ bucket metadata without adding measurement collectives to the profiled region.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/profile_ddp.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --warmup-steps 3 --profile-steps 3 --bucket-cap-mb 1 --output-dir results/raw/profiles/ddp_tiny
 ```
+
+## Step 15: train and verify FSDP2
+
+FSDP2 shards each Transformer block bottom-up, then shards the parameters left
+at the root. The correctness job checks DTensor ownership and compares one
+sharded update against an unsharded global-batch reference.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_fsdp2_correctness.py --backend nccl --local-batch-size 2 --seq-len 16 --learning-rate 0.01 --seed 42
+```
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/train_fsdp2.py --backend nccl --model tiny --local-batch-size 2 --seq-len 128 --steps 5 --seed 42
+```
