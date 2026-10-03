@@ -203,3 +203,12 @@ compare measured allocated/reserved peaks with persistent-state estimates.
 ```bash
 python scripts/benchmark_ddp_fsdp2_memory.py --model tiny --world-size 2 --local-batch-size 1 --seq-len 128 --warmup-steps 3 --steps 5 --seed 42 --run-name kaggle_tiny_memory
 ```
+
+## Step 17: find the DDP and FSDP2 OOM boundary
+
+Sweep one fixed Transformer family in fresh jobs. Only explicit CUDA
+out-of-memory failures count as OOM; other failures stop the experiment.
+
+```bash
+python scripts/benchmark_oom_boundary.py --strategies ddp fsdp2 --targets-millions 100 200 300 400 --world-size 2 --local-batch-size 1 --seq-len 128 --steps 1 --seed 42 --run-name kaggle_oom_boundary
+```
