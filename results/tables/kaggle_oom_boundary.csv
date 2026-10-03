@@ -1,0 +1,5 @@
+strategy,target_parameters_millions,actual_parameters,hidden_size,num_layers,num_heads,intermediate_size,vocab_size,seq_len,world_size,local_batch_size,global_batch_size,precision,optimizer,steps,status,peak_memory_allocated,peak_memory_reserved,log_path
+fsdp2,700.0,698252160,1920,12,8,5760,32000,128,2,1,2,fp32,adamw,1,PASS,7114578432,8346664960,results/raw/kaggle_oom_boundary/logs/fsdp2_700m.log
+fsdp2,900.0,902191008,2208,12,8,6624,32000,128,2,1,2,fp32,adamw,1,PASS,9067695104,10051649536,results/raw/kaggle_oom_boundary/logs/fsdp2_900m.log
+fsdp2,1200.0,1200439184,2576,12,8,7728,32000,128,2,1,2,fp32,adamw,1,PASS,12051895808,13434355712,results/raw/kaggle_oom_boundary/logs/fsdp2_1200m.log
+fsdp2,1400.0,1402668400,2800,12,8,8400,32000,128,2,1,2,fp32,adamw,1,PASS,14063142400,15353249792,results/raw/kaggle_oom_boundary/logs/fsdp2_1400m.log

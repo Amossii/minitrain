@@ -1,0 +1,5 @@
+strategy,target_parameters_millions,actual_parameters,hidden_size,num_layers,num_heads,intermediate_size,vocab_size,seq_len,world_size,local_batch_size,global_batch_size,precision,optimizer,steps,status,peak_memory_allocated,peak_memory_reserved,log_path
+fsdp2,1400.0,1402668400,2800,12,8,8400,32000,128,2,1,2,fp32,adamw,1,PASS,14063142400,15353249792,results/raw/fsdp_oom_boundary/logs/fsdp2_1400m.log
+fsdp2,1450.0,1448039968,2848,12,8,8544,32000,128,2,1,2,fp32,adamw,1,PASS,14597335552,15393095680,results/raw/fsdp_oom_boundary/logs/fsdp2_1450m.log
+fsdp2,1500.0,1501882008,2904,12,8,8712,32000,128,2,1,2,fp32,adamw,1,OOM,0,0,results/raw/fsdp_oom_boundary/logs/fsdp2_1500m.log
+fsdp2,1550.0,1548811080,2952,12,8,8856,32000,128,2,1,2,fp32,adamw,1,OOM,0,0,results/raw/fsdp_oom_boundary/logs/fsdp2_1550m.log

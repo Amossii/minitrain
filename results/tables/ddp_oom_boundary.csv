@@ -1,0 +1,4 @@
+strategy,target_parameters_millions,actual_parameters,hidden_size,num_layers,num_heads,intermediate_size,vocab_size,seq_len,world_size,local_batch_size,global_batch_size,precision,optimizer,steps,status,peak_memory_allocated,peak_memory_reserved,log_path
+ddp,600.0,601051048,1768,12,8,5304,32000,128,2,1,2,fp32,adamw,1,PASS,14516963328,14715715584,results/raw/ddp_oom_boundary/logs/ddp_600m.log
+ddp,650.0,651310968,1848,12,8,5544,32000,128,2,1,2,fp32,adamw,1,OOM,0,0,results/raw/ddp_oom_boundary/logs/ddp_650m.log
+ddp,700.0,698252160,1920,12,8,5760,32000,128,2,1,2,fp32,adamw,1,OOM,0,0,results/raw/ddp_oom_boundary/logs/ddp_700m.log
