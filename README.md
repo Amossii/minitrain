@@ -5,6 +5,19 @@ systems work. The project starts from a single-GPU PyTorch baseline and will
 progress toward DDP, FSDP2, tensor parallelism, and DeepSpeed on a single node
 with two GPUs.
 
+The 24-step implementation is complete. It includes explicit distributed
+correctness checks, reproducible CSV benchmarks, profiler entry points, manual
+2-way tensor parallelism, and sharded training checkpoints. See the
+[final report](report/final_report.md) for measured results and limitations.
+
+## Key measured result
+
+On the recorded 2×T4 FP32 OOM sweep, DDP trained up to approximately 601M
+parameters before the next 650M candidate failed, while FSDP2 trained 1.448B
+before the next 1.502B candidate failed: a 2.41× increase in largest verified
+trainable model. The tiny-model throughput experiments intentionally show that
+distributed execution can be slower when communication dominates computation.
+
 ## Step 1: verify the environment
 
 The environment checker reports the versions and hardware that later steps
@@ -274,3 +287,20 @@ python scripts/benchmark_unified.py --model tiny --world-size 2 --global-batch-s
 
 See `docs/step-23-unified-benchmark.md` for metric definitions, fairness rules,
 expected files, and result-analysis questions.
+
+## Step 24: verify distributed checkpoint resume
+
+Save and restore logical model state, AdamW state, and the next training step
+without gathering FSDP2 shards into a rank-0 `torch.save` file. Correctness is
+proven by continuing both uninterrupted and restored branches for one update.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_distributed_checkpoint.py --strategy ddp --backend nccl --model tiny --local-batch-size 1 --seq-len 16 --pre-steps 2 --checkpoint-dir /kaggle/working/minitrain_checkpoints/ddp_step2
+```
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_distributed_checkpoint.py --strategy fsdp2 --backend nccl --model tiny --local-batch-size 1 --seq-len 16 --pre-steps 2 --checkpoint-dir /kaggle/working/minitrain_checkpoints/fsdp2_step2
+```
+
+The full design, expected output, and validation status are documented in
+`docs/step-24-checkpoint-and-final-report.md`.
