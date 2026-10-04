@@ -261,3 +261,16 @@ states, gradients, and parameters. DeepSpeed remains an optional dependency.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/train_deepspeed.py --zero-stage 3 --model tiny --local-batch-size 2 --seq-len 128 --steps 3 --seed 42 --verify-parameters
 ```
+
+## Step 23: run the unified benchmark
+
+Run Single, DDP, FSDP2, DeepSpeed ZeRO-1/2/3, and handwritten TP with one
+fixed workload. Data-parallel strategies and tensor parallelism are written to
+separate comparison tables because their per-rank batch semantics differ.
+
+```bash
+python scripts/benchmark_unified.py --model tiny --world-size 2 --global-batch-size 2 --seq-len 128 --learning-rate 0.0003 --warmup-steps 5 --steps 20 --seed 42 --run-name kaggle_unified_tiny
+```
+
+See `docs/step-23-unified-benchmark.md` for metric definitions, fairness rules,
+expected files, and result-analysis questions.
