@@ -230,3 +230,12 @@ optionally AllGather the output, and AllReduce input-gradient contributions.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/verify_column_parallel.py --backend nccl --batch-size 2 --seq-len 3 --in-features 8 --out-features 12 --seed 42
 ```
+
+## Step 20: implement RowParallelLinear
+
+Shard `nn.Linear.weight=[out_features, in_features]` along its input dimension,
+sum local output contributions with AllReduce, then add replicated bias once.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_row_parallel.py --backend nccl --batch-size 2 --seq-len 3 --in-features 12 --out-features 8 --seed 42
+```
