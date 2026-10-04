@@ -239,3 +239,16 @@ sum local output contributions with AllReduce, then add replicated bias once.
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/verify_row_parallel.py --backend nccl --batch-size 2 --seq-len 3 --in-features 12 --out-features 8 --seed 42
 ```
+
+## Step 21: train a tensor-parallel Transformer
+
+Use Column Parallel for Q/K/V/Gate/Up and Row Parallel for Attention Output/Down,
+keeping intermediate shards local and restoring replicated residual streams.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/verify_tp_transformer.py --backend nccl --batch-size 2 --seq-len 8 --learning-rate 0.01 --seed 42
+```
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/train_tp.py --backend nccl --model tiny --batch-size 2 --seq-len 128 --steps 5 --seed 42
+```
