@@ -9,6 +9,8 @@ description = "A distributed LLM training systems lab"
 requires-python = ">=3.10"
 dependencies = ["torch>=2.4"]
 
+[project.optional-dependencies]
+deepspeed = ["deepspeed"]
+
 [tool.setuptools.packages.find]
 include = ["minitrain*"]
-

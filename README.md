@@ -252,3 +252,12 @@ torchrun --standalone --nproc-per-node=2 scripts/verify_tp_transformer.py --back
 ```bash
 torchrun --standalone --nproc-per-node=2 scripts/train_tp.py --backend nccl --model tiny --batch-size 2 --seq-len 128 --steps 5 --seed 42
 ```
+
+## Step 22: train with DeepSpeed ZeRO-1/2/3
+
+Use the same MiniTransformer workload while progressively sharding optimizer
+states, gradients, and parameters. DeepSpeed remains an optional dependency.
+
+```bash
+torchrun --standalone --nproc-per-node=2 scripts/train_deepspeed.py --zero-stage 3 --model tiny --local-batch-size 2 --seq-len 128 --steps 3 --seed 42 --verify-parameters
+```
