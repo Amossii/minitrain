@@ -1,0 +1,17 @@
+{
+  "gpu_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "world_size": 2,
+  "precision": "fp32",
+  "optimizer": "adamw",
+  "seq_len": 128,
+  "global_batch_size": 2,
+  "activation_checkpoint": false,
+  "vocab_size": 32000,
+  "num_layers": 12,
+  "num_heads": 8,
+  "mlp_ratio": 3,
+  "seed": 42
+}

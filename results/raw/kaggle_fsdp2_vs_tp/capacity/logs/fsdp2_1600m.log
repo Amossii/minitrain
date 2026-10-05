@@ -1,0 +1,97 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+[W1005 12:57:09.759525331 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1005 12:57:12.459517994 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1005 12:57:12.488059179 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/kaggle/working/minitrain/scripts/oom_boundary_worker.py", line 166, in <module>
+[rank1]:     raise SystemExit(main())
+[rank1]:                      ^^^^^^
+[rank1]:   File "/kaggle/working/minitrain/scripts/oom_boundary_worker.py", line 128, in main
+[rank1]:     train_step(train_model, optimizer, batch, context.device)
+[rank1]:   File "/kaggle/working/minitrain/minitrain/training.py", line 74, in train_step
+[rank1]:     optimizer.step()
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 526, in wrapper
+[rank1]:     out = func(*args, **kwargs)
+[rank1]:           ^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 81, in _use_grad
+[rank1]:     ret = func(*args, **kwargs)
+[rank1]:           ^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 248, in step
+[rank1]:     adam(
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 151, in maybe_fallback
+[rank1]:     return func(*args, **kwargs)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 970, in adam
+[rank1]:     func(
+[rank1]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 791, in _multi_tensor_adam
+[rank1]:     exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
+[rank1]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 52.00 MiB. GPU 1 has a total capacity of 14.56 GiB of which 40.75 MiB is free. Including non-PyTorch memory, this process has 14.52 GiB memory in use. Of the allocated memory 14.17 GiB is allocated by PyTorch, and 140.54 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/kaggle/working/minitrain/scripts/oom_boundary_worker.py", line 166, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:                      ^^^^^^
+[rank0]:   File "/kaggle/working/minitrain/scripts/oom_boundary_worker.py", line 128, in main
+[rank0]:     train_step(train_model, optimizer, batch, context.device)
+[rank0]:   File "/kaggle/working/minitrain/minitrain/training.py", line 74, in train_step
+[rank0]:     optimizer.step()
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 526, in wrapper
+[rank0]:     out = func(*args, **kwargs)
+[rank0]:           ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 81, in _use_grad
+[rank0]:     ret = func(*args, **kwargs)
+[rank0]:           ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 248, in step
+[rank0]:     adam(
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/optimizer.py", line 151, in maybe_fallback
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 970, in adam
+[rank0]:     func(
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/optim/adam.py", line 791, in _multi_tensor_adam
+[rank0]:     exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
+[rank0]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 52.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 40.75 MiB is free. Including non-PyTorch memory, this process has 14.52 GiB memory in use. Of the allocated memory 14.17 GiB is allocated by PyTorch, and 140.54 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+E1005 12:57:30.546000 354 torch/distributed/elastic/multiprocessing/api.py:984] failed (exitcode: 1) local_rank: 0 (pid: 362) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 995, in <module>
+    main()
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 991, in main
+    run(args)
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 982, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+scripts/oom_boundary_worker.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-10-05_12:57:30
+  host      : 18fc1f8e987a
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 363)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-10-05_12:57:30
+  host      : 18fc1f8e987a
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 362)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
