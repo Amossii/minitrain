@@ -20,7 +20,10 @@ from torch.utils.data import DataLoader, DistributedSampler
 from minitrain.config import available_model_configs, get_model_config
 from minitrain.data import SyntheticTokenDataset
 from minitrain.distributed.fsdp2 import apply_fsdp2
-from minitrain.distributed.oom_boundary import transformer_parameter_count
+from minitrain.distributed.oom_boundary import (
+    build_boundary_config,
+    transformer_parameter_count,
+)
 from minitrain.distributed.runtime import cleanup_distributed, init_distributed
 from minitrain.distributed.unified_benchmark import (
     UnifiedStepMetrics,
@@ -109,6 +112,11 @@ def main() -> int:
     parser.add_argument("--backend", choices=("gloo", "nccl"), default="nccl")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--model", choices=available_model_configs(), default="tiny")
+    parser.add_argument("--target-parameters-millions", type=float)
+    parser.add_argument("--vocab-size", type=int, default=32_000)
+    parser.add_argument("--num-layers", type=int, default=12)
+    parser.add_argument("--num-heads", type=int, default=8)
+    parser.add_argument("--mlp-ratio", type=int, default=3)
     parser.add_argument("--global-batch-size", type=int, required=True)
     parser.add_argument("--seq-len", type=int, default=128)
     parser.add_argument("--learning-rate", type=float, default=3e-4)
@@ -122,7 +130,18 @@ def main() -> int:
     if args.warmup_steps < 0:
         parser.error("--warmup-steps must be non-negative")
 
-    model_config = get_model_config(args.model)
+    model_config = (
+        build_boundary_config(
+            args.target_parameters_millions,
+            args.seq_len,
+            vocab_size=args.vocab_size,
+            num_layers=args.num_layers,
+            num_heads=args.num_heads,
+            mlp_ratio=args.mlp_ratio,
+        )
+        if args.target_parameters_millions is not None
+        else get_model_config(args.model)
+    )
     if args.seq_len > model_config.seq_len:
         parser.error(f"--seq-len exceeds the {args.model} maximum")
 
@@ -206,7 +225,11 @@ def main() -> int:
                     seq_len=args.seq_len,
                     num_parameters=num_parameters,
                     warmup_steps=args.warmup_steps,
-                    model_name=args.model,
+                    model_name=(
+                        f"target_{args.target_parameters_millions:g}m"
+                        if args.target_parameters_millions is not None
+                        else args.model
+                    ),
                     precision="fp32",
                     optimizer="adamw",
                     strategy=args.strategy,

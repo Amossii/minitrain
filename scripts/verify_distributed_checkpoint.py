@@ -14,7 +14,10 @@ if str(PROJECT_ROOT) not in sys.path:
 import torch
 import torch.distributed as dist
 from torch import nn
-from torch.distributed.checkpoint.state_dict import StateDictOptions, get_model_state_dict
+from torch.distributed.checkpoint.state_dict import (
+    StateDictOptions,
+    get_model_state_dict,
+)
 from torch.nn.parallel import DistributedDataParallel
 
 from minitrain.config import available_model_configs, get_model_config
@@ -90,7 +93,11 @@ def assert_models_equal(expected: nn.Module, actual: nn.Module, rank: int) -> No
             raise AssertionError("restored model state keys do not match")
         for name in expected_state:
             torch.testing.assert_close(
-                actual_state[name], expected_state[name], atol=0, rtol=0, msg=lambda _: name
+                actual_state[name],
+                expected_state[name],
+                atol=0,
+                rtol=0,
+                msg=lambda _: name,
             )
 
 
@@ -99,7 +106,9 @@ def assert_models_equal(expected: nn.Module, actual: nn.Module, rank: int) -> No
 def main() -> int:
     """执行分布式 checkpoint 的端到端 resume correctness 验证。"""
 
-    parser = argparse.ArgumentParser(description="Verify distributed checkpoint resume.")
+    parser = argparse.ArgumentParser(
+        description="Verify distributed checkpoint resume."
+    )
     parser.add_argument("--strategy", choices=("ddp", "fsdp2"), required=True)
     parser.add_argument("--backend", choices=("gloo", "nccl"), default="nccl")
     parser.add_argument("--model", choices=available_model_configs(), default="tiny")
@@ -127,9 +136,7 @@ def main() -> int:
         source = build_model(
             args.strategy, model_config, context.device, context.local_rank
         )
-        source_optimizer = torch.optim.AdamW(
-            source.parameters(), lr=args.learning_rate
-        )
+        source_optimizer = torch.optim.AdamW(source.parameters(), lr=args.learning_rate)
 
         for step in range(args.pre_steps):
             batch = local_batch_for_step(
@@ -182,9 +189,7 @@ def main() -> int:
             rank=context.rank,
             world_size=context.world_size,
         )
-        source_loss = train_step(
-            source, source_optimizer, resume_batch, context.device
-        )
+        source_loss = train_step(source, source_optimizer, resume_batch, context.device)
         restored_loss = train_step(
             restored, restored_optimizer, resume_batch, context.device
         )

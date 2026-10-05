@@ -1,4 +1,4 @@
-"""运行一个隔离的 DDP 或 FSDP2 模型规模探测任务。"""
+"""运行一个隔离的 DDP、FSDP2 或 TP 模型规模探测任务。"""
 
 from __future__ import annotations
 
@@ -23,7 +23,9 @@ from minitrain.distributed.oom_boundary import (
     transformer_parameter_count,
 )
 from minitrain.distributed.runtime import cleanup_distributed, init_distributed
+from minitrain.distributed.fsdp_tp_comparison import per_rank_batch_size
 from minitrain.model import MiniTransformer
+from minitrain.tensor_parallel.transformer import TensorParallelTransformer
 from minitrain.training import train_step
 
 
@@ -33,7 +35,7 @@ def main() -> int:
     """执行一次模型规模探测，并在成功时写入结果。"""
 
     parser = argparse.ArgumentParser(description="Probe one distributed OOM point.")
-    parser.add_argument("--strategy", choices=("ddp", "fsdp2"), required=True)
+    parser.add_argument("--strategy", choices=("ddp", "fsdp2", "tp"), required=True)
     parser.add_argument("--backend", choices=("nccl",), default="nccl")
     parser.add_argument("--target-parameters-millions", type=float, required=True)
     parser.add_argument("--vocab-size", type=int, default=32_000)
@@ -41,6 +43,7 @@ def main() -> int:
     parser.add_argument("--num-heads", type=int, default=8)
     parser.add_argument("--mlp-ratio", type=int, default=3)
     parser.add_argument("--local-batch-size", type=int, default=1)
+    parser.add_argument("--global-batch-size", type=int)
     parser.add_argument("--seq-len", type=int, default=128)
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--steps", type=int, default=1)
@@ -49,6 +52,8 @@ def main() -> int:
     args = parser.parse_args()
     if min(args.local_batch_size, args.steps) <= 0:
         parser.error("--local-batch-size and --steps must be positive")
+    if args.global_batch_size is not None and args.global_batch_size <= 0:
+        parser.error("--global-batch-size must be positive")
 
     config = build_boundary_config(
         args.target_parameters_millions,
@@ -70,8 +75,9 @@ def main() -> int:
 
         # 先在 CPU 构造模型。FSDP2 会依据 CUDA DeviceMesh 直接生成本地 shard，
         # 避免“先复制完整 GPU 模型再分片”人为降低它的最大可训练边界。
-        model = MiniTransformer(config)
+        model = MiniTransformer(config) if args.strategy != "tp" else None
         if args.strategy == "ddp":
+            assert model is not None
             model.to(context.device)
             train_model = DistributedDataParallel(
                 model,
@@ -79,23 +85,41 @@ def main() -> int:
                 output_device=context.local_rank,
                 broadcast_buffers=False,
             )
-        else:
+        elif args.strategy == "fsdp2":
+            assert model is not None
             train_model = apply_fsdp2(model, context.device.type)
+        else:
+            train_model = TensorParallelTransformer(config, device=context.device)
         optimizer = torch.optim.AdamW(train_model.parameters(), lr=args.learning_rate)
 
-        global_batch_size = args.local_batch_size * context.world_size
+        if args.global_batch_size is None:
+            # 保留原有 DDP/FSDP2 CLI 语义，旧实验仍以 local batch 推导 global batch。
+            global_batch_size = args.local_batch_size * context.world_size
+            batch_size_per_rank = args.local_batch_size
+        else:
+            global_batch_size = args.global_batch_size
+            if args.strategy == "ddp":
+                if global_batch_size % context.world_size != 0:
+                    raise ValueError("DDP global batch must be divisible by world size")
+                batch_size_per_rank = global_batch_size // context.world_size
+            else:
+                batch_size_per_rank = per_rank_batch_size(
+                    args.strategy, global_batch_size, context.world_size
+                )
         dataset = SyntheticTokenDataset(
             global_batch_size * args.steps,
             args.seq_len,
             config.vocab_size,
             args.seed,
         )
-        sampler = DistributedSampler(
-            dataset, context.world_size, context.rank, shuffle=False, drop_last=True
-        )
+        sampler = None
+        if args.strategy in ("ddp", "fsdp2"):
+            sampler = DistributedSampler(
+                dataset, context.world_size, context.rank, shuffle=False, drop_last=True
+            )
         dataloader = DataLoader(
             dataset,
-            batch_size=args.local_batch_size,
+            batch_size=batch_size_per_rank,
             sampler=sampler,
             drop_last=True,
             pin_memory=True,

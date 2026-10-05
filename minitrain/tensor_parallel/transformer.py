@@ -6,8 +6,8 @@ import math
 
 import torch
 import torch.distributed as dist
-from torch import Tensor, nn
 import torch.nn.functional as F
+from torch import Tensor, nn
 
 from minitrain.config import ModelConfig
 from minitrain.model import MiniTransformer, RMSNorm
@@ -111,7 +111,9 @@ class TensorParallelSelfAttention(nn.Module):
 
         batch_size, seq_len, hidden_size = hidden_states.shape
         if hidden_size != self.hidden_size:
-            raise ValueError(f"expected hidden size {self.hidden_size}, got {hidden_size}")
+            raise ValueError(
+                f"expected hidden size {self.hidden_size}, got {hidden_size}"
+            )
         if seq_len > self.causal_mask.size(0):
             raise ValueError("sequence length exceeds configured maximum")
 
@@ -124,8 +126,10 @@ class TensorParallelSelfAttention(nn.Module):
         scores = scores.masked_fill(~visible, float("-inf"))
         probabilities = F.softmax(scores, dim=-1, dtype=torch.float32).to(value.dtype)
         local_context = probabilities @ value
-        local_context = local_context.transpose(1, 2).contiguous().view(
-            batch_size, seq_len, self.local_hidden_size
+        local_context = (
+            local_context.transpose(1, 2)
+            .contiguous()
+            .view(batch_size, seq_len, self.local_hidden_size)
         )
         return self.o_proj(local_context)
 
@@ -170,7 +174,9 @@ class TensorParallelSwiGLU(nn.Module):
     def forward(self, hidden_states: Tensor) -> Tensor:
         """在本地 intermediate shard 上计算 SwiGLU。"""
 
-        local_gated = F.silu(self.gate_proj(hidden_states)) * self.up_proj(hidden_states)
+        local_gated = F.silu(self.gate_proj(hidden_states)) * self.up_proj(
+            hidden_states
+        )
         return self.down_proj(local_gated)
 
 
@@ -246,9 +252,7 @@ class TensorParallelTransformer(nn.Module):
             self.position_embedding.weight.copy_(reference.position_embedding.weight)
             self.final_norm.weight.copy_(reference.final_norm.weight)
             self.lm_head.weight.copy_(reference.lm_head.weight)
-            for tp_block, ref_block in zip(
-                self.blocks, reference.blocks, strict=True
-            ):
+            for tp_block, ref_block in zip(self.blocks, reference.blocks, strict=True):
                 tp_block.attention_norm.weight.copy_(ref_block.attention_norm.weight)
                 tp_block.mlp_norm.weight.copy_(ref_block.mlp_norm.weight)
                 tp_block.attention.q_proj.load_from_linear(ref_block.attention.q_proj)

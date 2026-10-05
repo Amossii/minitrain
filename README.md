@@ -304,3 +304,17 @@ torchrun --standalone --nproc-per-node=2 scripts/verify_distributed_checkpoint.p
 
 The full design, expected output, and validation status are documented in
 `docs/step-24-checkpoint-and-final-report.md`.
+
+## Course experiment: compare FSDP2 and TP capacity
+
+Run an isolated FP32 OOM sweep on 2 × T4, then compare throughput using one
+model size that both strategies have passed. The effective global batch and
+model structure stay fixed; FSDP2 ranks receive distinct local samples while
+TP ranks cooperate on the same replicated batch.
+
+```bash
+python scripts/benchmark_fsdp2_vs_tp.py --capacity-targets-millions 100 200 400 600 800 1000 1200 1400 --throughput-target-millions 100 --global-batch-size 2 --seq-len 128 --run-name kaggle_fsdp2_vs_tp
+```
+
+See `docs/course-fsdp2-vs-tp.md` for the fixed workload, output schema,
+correctness prerequisites, and rules for interpreting the results.
