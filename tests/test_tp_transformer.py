@@ -6,6 +6,7 @@ import unittest
 
 from minitrain.config import ModelConfig
 from minitrain.tensor_parallel.transformer import validate_tensor_parallel_config
+from minitrain.tensor_parallel.vocab import vocabulary_partition_range
 from scripts.verify_tp_transformer import correctness_config
 
 
@@ -25,6 +26,14 @@ class TensorParallelConfigTest(unittest.TestCase):
         config = ModelConfig(64, 8, 24, 2, 4, 73)
         with self.assertRaisesRegex(ValueError, "intermediate_size"):
             validate_tensor_parallel_config(config, world_size=2)
+
+    def test_two_ranks_own_disjoint_complete_vocabulary(self) -> None:
+        self.assertEqual(vocabulary_partition_range(64, 2, 0), (0, 32))
+        self.assertEqual(vocabulary_partition_range(64, 2, 1), (32, 64))
+
+    def test_rejects_non_divisible_vocabulary(self) -> None:
+        with self.assertRaisesRegex(ValueError, "divisible"):
+            vocabulary_partition_range(65, 2, 0)
 
 
 if __name__ == "__main__":

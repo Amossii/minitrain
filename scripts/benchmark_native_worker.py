@@ -31,6 +31,7 @@ from minitrain.distributed.unified_benchmark import (
 )
 from minitrain.model import MiniTransformer
 from minitrain.tensor_parallel.transformer import TensorParallelTransformer
+from minitrain.tensor_parallel.full_transformer import FullTensorParallelTransformer
 from minitrain.training import StepMeasurement, measure_train_step, train_step
 
 
@@ -84,6 +85,8 @@ def build_model(
 
     if strategy == "tp":
         return TensorParallelTransformer(model_config, device=device)  # type: ignore[arg-type]
+    if strategy == "full_tp":
+        return FullTensorParallelTransformer(model_config, device=device)  # type: ignore[arg-type]
 
     model = MiniTransformer(model_config).to(device)  # type: ignore[arg-type]
     if strategy == "single":
@@ -108,7 +111,11 @@ def main() -> int:
     """执行 warmup 和正式测量，并写入原始统一指标。"""
 
     parser = argparse.ArgumentParser(description="Benchmark one native strategy.")
-    parser.add_argument("--strategy", choices=("single", "ddp", "fsdp2", "tp"), required=True)
+    parser.add_argument(
+        "--strategy",
+        choices=("single", "ddp", "fsdp2", "tp", "full_tp"),
+        required=True,
+    )
     parser.add_argument("--backend", choices=("gloo", "nccl"), default="nccl")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--model", choices=available_model_configs(), default="tiny")
@@ -167,7 +174,7 @@ def main() -> int:
                 raise ValueError("data-parallel global batch must be divisible by world size")
             batch_size_per_process = args.global_batch_size // world_size
         else:
-            # Single 和 TP 都处理完整 global batch；TP ranks 的输入是 replicated。
+            # Single 和两种 TP 都处理完整 global batch；TP ranks 的输入是 replicated。
             batch_size_per_process = args.global_batch_size
 
         torch.manual_seed(args.seed)
@@ -201,13 +208,23 @@ def main() -> int:
             pin_memory=device.type == "cuda",
         )
         iterator = iter(dataloader)
+        loss_fn = model.loss if isinstance(model, FullTensorParallelTransformer) else None
         for _ in range(args.warmup_steps):
-            train_step(model, optimizer, next(iterator), device)
+            if loss_fn is None:
+                train_step(model, optimizer, next(iterator), device)
+            else:
+                train_step(model, optimizer, next(iterator), device, loss_fn)
 
         records: list[UnifiedStepMetrics] = []
         num_parameters = transformer_parameter_count(model_config)
         for step in range(args.steps):
-            local = measure_train_step(model, optimizer, next(iterator), device)
+            local = (
+                measure_train_step(model, optimizer, next(iterator), device)
+                if loss_fn is None
+                else measure_train_step(
+                    model, optimizer, next(iterator), device, loss_fn
+                )
+            )
             if not math.isfinite(local.loss):
                 raise AssertionError(f"non-finite loss at measured step {step}")
             observed = (

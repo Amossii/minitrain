@@ -34,6 +34,10 @@ STRATEGY_SEMANTICS = {
         "data_parallel", "parameter_all_gather+gradient_reduce_scatter"
     ),
     "tp": StrategySemantics("tensor_parallel", "block_output_all_reduce"),
+    "full_tp": StrategySemantics(
+        "tensor_parallel",
+        "vocab_embedding_all_reduce+block_output_all_reduce+vocab_parallel_cross_entropy",
+    ),
 }
 
 

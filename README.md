@@ -307,14 +307,17 @@ The full design, expected output, and validation status are documented in
 
 ## Course experiment: compare FSDP2 and TP capacity
 
+The original Step 21 keeps embedding and LM Head replicated. The Full TP
+extension additionally shards both vocabulary matrices and computes cross
+entropy directly from local logits, without gathering `[B,T,V]` on every rank.
 Run an isolated FP32 OOM sweep on 2 × T4, then compare throughput using one
-model size that both strategies have passed. The effective global batch and
-model structure stay fixed; FSDP2 ranks receive distinct local samples while
-TP ranks cooperate on the same replicated batch.
+model size that FSDP2 and Full TP have both passed.
 
 ```bash
-python scripts/benchmark_fsdp2_vs_tp.py --capacity-targets-millions 100 200 400 600 800 1000 1200 1400 --throughput-target-millions 100 --global-batch-size 2 --seq-len 128 --run-name kaggle_fsdp2_vs_tp
+torchrun --standalone --nproc-per-node=2 scripts/verify_full_tp_transformer.py --backend nccl --batch-size 2 --seq-len 8
+python scripts/benchmark_fsdp2_vs_tp.py --capacity-targets-millions 1200 1300 1350 1400 1450 1500 1600 --throughput-target-millions 1200 --global-batch-size 2 --seq-len 128 --run-name kaggle_fsdp2_vs_full_tp
 ```
 
-See `docs/course-fsdp2-vs-tp.md` for the fixed workload, output schema,
-correctness prerequisites, and rules for interpreting the results.
+See `docs/step-21a-21d-full-tensor-parallel.md` for vocabulary ownership,
+distributed-softmax math, correctness evidence, and the new benchmark protocol.
+The older `docs/course-fsdp2-vs-tp.md` and report remain Block-only TP history.

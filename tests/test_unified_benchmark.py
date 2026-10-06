@@ -128,6 +128,7 @@ class UnifiedBenchmarkTest(unittest.TestCase):
     def test_strategy_communication_is_explicit(self) -> None:
         self.assertEqual(strategy_semantics("ddp").parallelism_family, "data_parallel")
         self.assertIn("all_reduce", strategy_semantics("tp").communication)
+        self.assertIn("vocab", strategy_semantics("full_tp").communication)
 
 
 if __name__ == "__main__":

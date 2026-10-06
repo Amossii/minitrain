@@ -1,4 +1,4 @@
-"""在固定双卡 workload 下比较 FSDP2 与手写 TP 的容量和吞吐。"""
+"""在固定双卡 workload 下比较 FSDP2 与 Full TP 的容量和吞吐。"""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from minitrain.distributed.unified_benchmark import (
 )
 
 
-STRATEGIES = ("fsdp2", "tp")
+STRATEGIES = ("fsdp2", "full_tp")
 
 
 # 输入是命令和日志路径，输出退出码与完整日志；每个容量点必须使用新进程，
@@ -76,7 +76,7 @@ def validate_hardware(require_t4: bool) -> list[str]:
 def main() -> int:
     """执行 FSDP2/TP 最大容量与同模型吞吐比较。"""
 
-    parser = argparse.ArgumentParser(description="Compare FSDP2 and TP fairly.")
+    parser = argparse.ArgumentParser(description="Compare FSDP2 and Full TP fairly.")
     parser.add_argument(
         "--capacity-targets-millions",
         nargs="+",
@@ -97,7 +97,7 @@ def main() -> int:
     parser.add_argument("--throughput-steps", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--require-t4", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--run-name", default="kaggle_fsdp2_vs_tp")
+    parser.add_argument("--run-name", default="kaggle_fsdp2_vs_full_tp")
     args = parser.parse_args()
 
     if args.world_size != 2:

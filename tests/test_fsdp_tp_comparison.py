@@ -14,6 +14,7 @@ class FSDPTPComparisonTest(unittest.TestCase):
     def test_effective_global_batch_has_different_rank_local_shapes(self) -> None:
         self.assertEqual(per_rank_batch_size("fsdp2", 2, 2), 1)
         self.assertEqual(per_rank_batch_size("tp", 2, 2), 2)
+        self.assertEqual(per_rank_batch_size("full_tp", 2, 2), 2)
 
     def test_fsdp_batch_must_be_divisible(self) -> None:
         with self.assertRaisesRegex(ValueError, "divisible"):
@@ -27,12 +28,12 @@ class FSDPTPComparisonTest(unittest.TestCase):
                 "status": "PASS",
             },
             {
-                "strategy": "tp",
+                "strategy": "full_tp",
                 "target_parameters_millions": 100.0,
                 "status": "OOM",
             },
         ]
-        with self.assertRaisesRegex(ValueError, "tp"):
+        with self.assertRaisesRegex(ValueError, "full_tp"):
             validate_throughput_target(rows, 100.0)
 
 

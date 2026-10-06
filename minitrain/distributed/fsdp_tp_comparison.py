@@ -8,7 +8,7 @@ from __future__ import annotations
 def per_rank_batch_size(strategy: str, global_batch_size: int, world_size: int) -> int:
     """计算固定有效 global batch 下每个 rank 的物理输入 batch。"""
 
-    if strategy not in ("fsdp2", "tp"):
+    if strategy not in ("fsdp2", "tp", "full_tp"):
         raise ValueError(f"unsupported strategy: {strategy}")
     if global_batch_size <= 0 or world_size <= 0:
         raise ValueError("global_batch_size and world_size must be positive")
@@ -27,7 +27,7 @@ def validate_throughput_target(
 ) -> None:
     """确认吞吐目标已被两种策略的容量实验共同验证。"""
 
-    expected = {"fsdp2", "tp"}
+    expected = {"fsdp2", "full_tp"}
     passed = {
         str(row["strategy"])
         for row in rows

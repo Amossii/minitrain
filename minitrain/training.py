@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import time
+from typing import Callable
 
 import torch
 from torch import Tensor, nn
@@ -55,6 +56,7 @@ def train_step(
     optimizer: torch.optim.Optimizer,
     batch: dict[str, Tensor],
     device: torch.device,
+    loss_fn: Callable[[Tensor, Tensor], Tensor] = causal_lm_loss,
 ) -> float:
     """Run zero-grad, forward, loss, backward, and optimizer update once."""
 
@@ -69,7 +71,7 @@ def train_step(
     # allocates only the gradients needed for this step, with no accumulation.
     optimizer.zero_grad(set_to_none=True)
     logits = model(input_ids)
-    loss = causal_lm_loss(logits, labels)
+    loss = loss_fn(logits, labels)
     loss.backward()
     optimizer.step()
 
@@ -84,6 +86,7 @@ def measure_train_step(
     optimizer: torch.optim.Optimizer,
     batch: dict[str, Tensor],
     device: torch.device,
+    loss_fn: Callable[[Tensor, Tensor], Tensor] = causal_lm_loss,
 ) -> StepMeasurement:
     """Run one update and measure forward, backward, optimizer, and peak memory."""
 
@@ -102,7 +105,7 @@ def measure_train_step(
 
         events[0].record()
         logits = model(input_ids)
-        loss = causal_lm_loss(logits, labels)
+        loss = loss_fn(logits, labels)
         events[1].record()
         loss.backward()
         events[2].record()
@@ -119,7 +122,7 @@ def measure_train_step(
     else:
         step_start = time.perf_counter()
         logits = model(input_ids)
-        loss = causal_lm_loss(logits, labels)
+        loss = loss_fn(logits, labels)
         forward_end = time.perf_counter()
         loss.backward()
         backward_end = time.perf_counter()

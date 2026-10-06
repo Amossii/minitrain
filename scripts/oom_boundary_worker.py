@@ -26,6 +26,7 @@ from minitrain.distributed.runtime import cleanup_distributed, init_distributed
 from minitrain.distributed.fsdp_tp_comparison import per_rank_batch_size
 from minitrain.model import MiniTransformer
 from minitrain.tensor_parallel.transformer import TensorParallelTransformer
+from minitrain.tensor_parallel.full_transformer import FullTensorParallelTransformer
 from minitrain.training import train_step
 
 
@@ -35,7 +36,9 @@ def main() -> int:
     """执行一次模型规模探测，并在成功时写入结果。"""
 
     parser = argparse.ArgumentParser(description="Probe one distributed OOM point.")
-    parser.add_argument("--strategy", choices=("ddp", "fsdp2", "tp"), required=True)
+    parser.add_argument(
+        "--strategy", choices=("ddp", "fsdp2", "tp", "full_tp"), required=True
+    )
     parser.add_argument("--backend", choices=("nccl",), default="nccl")
     parser.add_argument("--target-parameters-millions", type=float, required=True)
     parser.add_argument("--vocab-size", type=int, default=32_000)
@@ -75,7 +78,11 @@ def main() -> int:
 
         # 先在 CPU 构造模型。FSDP2 会依据 CUDA DeviceMesh 直接生成本地 shard，
         # 避免“先复制完整 GPU 模型再分片”人为降低它的最大可训练边界。
-        model = MiniTransformer(config) if args.strategy != "tp" else None
+        model = (
+            MiniTransformer(config)
+            if args.strategy not in ("tp", "full_tp")
+            else None
+        )
         if args.strategy == "ddp":
             assert model is not None
             model.to(context.device)
@@ -88,8 +95,10 @@ def main() -> int:
         elif args.strategy == "fsdp2":
             assert model is not None
             train_model = apply_fsdp2(model, context.device.type)
-        else:
+        elif args.strategy == "tp":
             train_model = TensorParallelTransformer(config, device=context.device)
+        else:
+            train_model = FullTensorParallelTransformer(config, device=context.device)
         optimizer = torch.optim.AdamW(train_model.parameters(), lr=args.learning_rate)
 
         if args.global_batch_size is None:
@@ -125,7 +134,16 @@ def main() -> int:
             pin_memory=True,
         )
         for batch in dataloader:
-            train_step(train_model, optimizer, batch, context.device)
+            if isinstance(train_model, FullTensorParallelTransformer):
+                train_step(
+                    train_model,
+                    optimizer,
+                    batch,
+                    context.device,
+                    train_model.loss,
+                )
+            else:
+                train_step(train_model, optimizer, batch, context.device)
         torch.cuda.synchronize(context.device)
 
         peak_allocated = torch.tensor(

@@ -13,6 +13,7 @@ from minitrain.config import ModelConfig
 from minitrain.model import MiniTransformer, RMSNorm
 from minitrain.tensor_parallel.column_linear import ColumnParallelLinear
 from minitrain.tensor_parallel.row_linear import RowParallelLinear
+from minitrain.tensor_parallel.vocab import VocabParallelEmbedding
 
 
 # 输入是完整模型配置和 TP world size，输出为空；该检查保证 attention head、
@@ -284,7 +285,7 @@ class TensorParallelTransformer(nn.Module):
 # 输入是 TP 模型以及是否读取 gradient；输出将所有 Column/Row shard 恢复成与普通
 # Transformer 同名、同 shape 的 tensor，供 correctness 使用，不参与训练图。
 def gather_tensor_parallel_tensors(
-    model: TensorParallelTransformer, *, gradients: bool = False
+    model: nn.Module, *, gradients: bool = False
 ) -> dict[str, Tensor]:
     """Gather TP 参数或梯度为完整 named tensor 字典。"""
 
@@ -296,7 +297,7 @@ def gather_tensor_parallel_tensors(
         module_name, _, parameter_name = name.rpartition(".")
         owner = model.get_submodule(module_name) if module_name else model
         detached = value.detach().contiguous()
-        if isinstance(owner, ColumnParallelLinear):
+        if isinstance(owner, (ColumnParallelLinear, VocabParallelEmbedding)):
             pieces = [torch.empty_like(detached) for _ in range(owner.world_size)]
             dist.all_gather(pieces, detached, group=owner.process_group)
             full_tensors[name] = torch.cat(pieces, dim=0)
