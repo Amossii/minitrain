@@ -1,0 +1,10 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+[W1006 02:37:24.998044843 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1006 02:37:27.629464849 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1006 02:37:27.637540493 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+strategy=full_tp parameters=1200439184 peak_allocated=12056747008
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)

@@ -1,0 +1,30 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+[W1006 02:38:12.818829219 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1006 02:38:14.344789476 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W1006 02:38:14.372383069 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+strategy=fsdp2 step=0 loss=10.577725 step_time=1.520069s tokens_per_second=168.41
+strategy=fsdp2 step=1 loss=10.503922 step_time=1.519528s tokens_per_second=168.47
+strategy=fsdp2 step=2 loss=10.533283 step_time=1.517596s tokens_per_second=168.69
+strategy=fsdp2 step=3 loss=10.607697 step_time=1.521884s tokens_per_second=168.21
+strategy=fsdp2 step=4 loss=10.627285 step_time=1.523374s tokens_per_second=168.05
+strategy=fsdp2 step=5 loss=10.592117 step_time=1.520675s tokens_per_second=168.35
+strategy=fsdp2 step=6 loss=10.593374 step_time=1.518531s tokens_per_second=168.58
+strategy=fsdp2 step=7 loss=10.500085 step_time=1.518165s tokens_per_second=168.62
+strategy=fsdp2 step=8 loss=10.572685 step_time=1.521398s tokens_per_second=168.27
+strategy=fsdp2 step=9 loss=10.422564 step_time=1.518597s tokens_per_second=168.58
+strategy=fsdp2 step=10 loss=10.525671 step_time=1.518958s tokens_per_second=168.54
+strategy=fsdp2 step=11 loss=10.559658 step_time=1.519560s tokens_per_second=168.47
+strategy=fsdp2 step=12 loss=10.596414 step_time=1.521297s tokens_per_second=168.28
+strategy=fsdp2 step=13 loss=10.638184 step_time=1.520618s tokens_per_second=168.35
+strategy=fsdp2 step=14 loss=10.721571 step_time=1.517472s tokens_per_second=168.70
+strategy=fsdp2 step=15 loss=10.782181 step_time=1.519365s tokens_per_second=168.49
+strategy=fsdp2 step=16 loss=10.855608 step_time=1.517828s tokens_per_second=168.66
+strategy=fsdp2 step=17 loss=11.038312 step_time=1.516886s tokens_per_second=168.77
+strategy=fsdp2 step=18 loss=10.822344 step_time=1.514895s tokens_per_second=168.99
+strategy=fsdp2 step=19 loss=10.705031 step_time=1.516574s tokens_per_second=168.80
+metrics_csv=/kaggle/working/minitrain/results/raw/kaggle_fsdp2_vs_full_tp/throughput/fsdp2.csv
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
